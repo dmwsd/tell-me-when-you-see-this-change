@@ -13,19 +13,19 @@ namespace TellMeWhenYouSeeThisChange
         private enum State { NoTarget, Idle, Armed, Changed, NoReading }
 
         // Logical (96 dpi) layout; scaled by _s.
-        private const int W = 300, H = 392;
-        private static readonly Rectangle TitleRect = new Rectangle(12, 12, 276, 34);
-        private static readonly Rectangle GaugePanel = new Rectangle(12, 56, 276, 184);
-        private static readonly Rectangle TargetGauge = new Rectangle(42, 72, 100, 100);
-        private static readonly Rectangle LiveGauge = new Rectangle(186, 90, 64, 64);
-        private static readonly Rectangle StatusPanel = new Rectangle(12, 250, 276, 48);
-        private static readonly Rectangle LampRect = new Rectangle(32, 265, 18, 18);
+        private const int W = 300, H = 406;
+        private static readonly Rectangle TitleRect = new Rectangle(12, 12, 276, 48);
+        private static readonly Rectangle GaugePanel = new Rectangle(12, 70, 276, 184);
+        private static readonly Rectangle TargetGauge = new Rectangle(42, 86, 100, 100);
+        private static readonly Rectangle LiveGauge = new Rectangle(186, 104, 64, 64);
+        private static readonly Rectangle StatusPanel = new Rectangle(12, 264, 276, 48);
+        private static readonly Rectangle LampRect = new Rectangle(32, 279, 18, 18);
 
         private readonly float _s;
         private readonly BrassButton _selectButton;
         private readonly BrassButton _armButton;
         private readonly BrassButton _testButton;
-        private readonly CheckBox _topMost;
+        private readonly BrassCheckBox _topMost;
         private readonly System.Windows.Forms.Timer _poll;
         private readonly System.Windows.Forms.Timer _testTimer;
         private readonly ToneGenerator _tone;
@@ -43,7 +43,7 @@ namespace TellMeWhenYouSeeThisChange
         {
             using (Graphics g = CreateGraphics()) _s = g.DpiX / 96f;
 
-            Text = "Tell Me When You See This Change";
+            Text = "TMWYSTC";
             AutoScaleMode = AutoScaleMode.None;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
@@ -53,28 +53,16 @@ namespace TellMeWhenYouSeeThisChange
             DoubleBuffered = true;
             Icon = BuildIcon();
 
-            _selectButton = new BrassButton { Text = "SELECT PIXEL", Bounds = Sc(new Rectangle(12, 310, 134, 36)) };
+            _selectButton = new BrassButton { Text = "SELECT PIXEL", Bounds = Sc(new Rectangle(12, 324, 134, 36)) };
             _selectButton.Click += delegate { PickPixel(); };
 
-            _armButton = new BrassButton { Text = "ARM", Bounds = Sc(new Rectangle(154, 310, 134, 36)), Enabled = false };
+            _armButton = new BrassButton { Text = "ARM", Bounds = Sc(new Rectangle(154, 324, 134, 36)), Enabled = false };
             _armButton.Click += delegate { SetArmed(!_armed); };
 
-            _testButton = new BrassButton { Text = "TEST TONE", Font = Theme.LabelFont, Bounds = Sc(new Rectangle(204, 358, 84, 22)) };
+            _testButton = new BrassButton { Text = "TEST TONE", Font = Theme.LabelFont, Bounds = Sc(new Rectangle(204, 372, 84, 22)) };
             _testButton.Click += delegate { TestTone(); };
 
-            _topMost = new CheckBox
-            {
-                Text = "Keep on top",
-                Font = Theme.LabelFont,
-                ForeColor = Theme.InkDim,
-                BackColor = Theme.Iron,
-                FlatStyle = FlatStyle.Flat,
-                AutoSize = true,
-                Location = Sc(new Point(14, 360)),
-                Cursor = Cursors.Hand
-            };
-            _topMost.FlatAppearance.BorderColor = Theme.BrassLo;
-            _topMost.FlatAppearance.CheckedBackColor = Theme.Brass;
+            _topMost = new BrassCheckBox { Text = "Keep on top", Bounds = Sc(new Rectangle(14, 372, 120, 22)) };
             _topMost.CheckedChanged += delegate { TopMost = _topMost.Checked; };
 
             Controls.Add(_selectButton);
@@ -235,7 +223,9 @@ namespace TellMeWhenYouSeeThisChange
             // title plate
             Rectangle title = Sc(TitleRect);
             Theme.RivetedPanel(g, title);
-            DrawCentered(g, "TELL ME WHEN YOU SEE THIS CHANGE", Theme.TitleFont, Theme.BrassHi, title);
+            int mid = title.Y + title.Height / 2;
+            DrawCentered(g, "\"TELL ME WHEN YOU", Theme.TitleFont, Theme.BrassHi, new Rectangle(title.X, mid - S(16), title.Width, S(16)));
+            DrawCentered(g, "SEE THIS CHANGE\"", Theme.TitleFont, Theme.BrassHi, new Rectangle(title.X, mid, title.Width, S(16)));
 
             // gauges
             Theme.RivetedPanel(g, Sc(GaugePanel));

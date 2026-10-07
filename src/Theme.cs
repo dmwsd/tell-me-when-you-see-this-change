@@ -19,7 +19,7 @@ namespace TellMeWhenYouSeeThisChange
         public static readonly Color LampGreen = Color.FromArgb(0x5C, 0xD6, 0x6A);
         public static readonly Color LampRed = Color.FromArgb(0xFF, 0x3B, 0x2F);
 
-        public static readonly Font TitleFont = new Font("Georgia", 9f, FontStyle.Bold);
+        public static readonly Font TitleFont = new Font("Georgia", 9f, FontStyle.Bold | FontStyle.Italic);
         public static readonly Font LabelFont = new Font("Georgia", 8f, FontStyle.Italic);
         public static readonly Font MonoFont = new Font("Consolas", 10f, FontStyle.Regular);
         public static readonly Font MonoSmall = new Font("Consolas", 8.5f, FontStyle.Regular);
@@ -133,6 +133,87 @@ namespace TellMeWhenYouSeeThisChange
                 (int)(a.R + (b.R - a.R) * t),
                 (int)(a.G + (b.G - a.G) * t),
                 (int)(a.B + (b.B - a.B) * t));
+        }
+    }
+
+    /// <summary>Checkbox with a brass box and a dark, high-contrast check mark.</summary>
+    internal sealed class BrassCheckBox : Control
+    {
+        private bool _checked, _hover;
+
+        public event EventHandler CheckedChanged;
+
+        public BrassCheckBox()
+        {
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer |
+                     ControlStyles.UserPaint | ControlStyles.ResizeRedraw | ControlStyles.Selectable, true);
+            BackColor = Theme.Iron;
+            Font = Theme.LabelFont;
+            Cursor = Cursors.Hand;
+        }
+
+        public bool Checked
+        {
+            get { return _checked; }
+            set
+            {
+                if (_checked == value) return;
+                _checked = value;
+                Invalidate();
+                if (CheckedChanged != null) CheckedChanged(this, EventArgs.Empty);
+            }
+        }
+
+        protected override void OnClick(EventArgs e) { Checked = !Checked; base.OnClick(e); }
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Space) Checked = !Checked;
+            base.OnKeyDown(e);
+        }
+        protected override void OnMouseEnter(EventArgs e) { _hover = true; Invalidate(); base.OnMouseEnter(e); }
+        protected override void OnMouseLeave(EventArgs e) { _hover = false; Invalidate(); base.OnMouseLeave(e); }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+            g.Clear(BackColor);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+
+            int size = (int)(Height * 0.6f);
+            Rectangle box = new Rectangle(1, (Height - size) / 2, size, size);
+            using (GraphicsPath path = Theme.RoundRect(box, 2))
+            {
+                if (_checked)
+                {
+                    using (LinearGradientBrush b = new LinearGradientBrush(box, Theme.BrassHi, Theme.Brass, 90f))
+                        g.FillPath(b, path);
+                }
+                else
+                {
+                    using (SolidBrush b = new SolidBrush(Theme.PlateEdge)) g.FillPath(b, path);
+                }
+                using (Pen p = new Pen(_hover ? Theme.BrassHi : Theme.Brass, 1.2f))
+                    g.DrawPath(p, path);
+            }
+
+            if (_checked)
+            {
+                using (Pen p = new Pen(Theme.Iron, Math.Max(2f, size / 6f)))
+                {
+                    p.StartCap = p.EndCap = LineCap.Round;
+                    p.LineJoin = LineJoin.Round;
+                    g.DrawLines(p, new[]
+                    {
+                        new PointF(box.X + size * 0.22f, box.Y + size * 0.52f),
+                        new PointF(box.X + size * 0.42f, box.Y + size * 0.72f),
+                        new PointF(box.X + size * 0.78f, box.Y + size * 0.28f)
+                    });
+                }
+            }
+
+            Rectangle text = new Rectangle(box.Right + 6, 0, Width - box.Right - 6, Height);
+            TextRenderer.DrawText(g, Text, Font, text, _checked || _hover ? Theme.Ink : Theme.InkDim,
+                TextFormatFlags.VerticalCenter | TextFormatFlags.Left | TextFormatFlags.SingleLine);
         }
     }
 
