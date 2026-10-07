@@ -18,6 +18,11 @@ namespace TellMeWhenYouSeeThisChange
         private const int StripHeight = 44;
         private const int Offset = 28;
 
+        // The loupe is sized in physical pixels, so its fonts are too (point sizes would grow with display scaling and overflow).
+        private static readonly Font HexFont = new Font("Consolas", 13f, FontStyle.Regular, GraphicsUnit.Pixel);
+        private static readonly Font CoordFont = new Font("Consolas", 11f, FontStyle.Regular, GraphicsUnit.Pixel);
+        private static readonly Font HelpFont = new Font("Consolas", 10f, FontStyle.Regular, GraphicsUnit.Pixel);
+
         private readonly Bitmap _shot;
         private readonly Rectangle _virtual;
         private Point _cursor;          // client coordinates == bitmap coordinates
@@ -142,6 +147,8 @@ namespace TellMeWhenYouSeeThisChange
         {
             Rectangle view = new Rectangle(box.X + Border, box.Y + Border, LoupeSize, LoupeSize);
             Rectangle strip = new Rectangle(box.X, view.Bottom + Border, box.Width, StripHeight);
+            // Never paint outside the loupe: anything beyond it wouldn't be invalidated and would leave trails.
+            g.SetClip(box, CombineMode.Intersect);
 
             // brass bezel
             g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -197,12 +204,16 @@ namespace TellMeWhenYouSeeThisChange
             using (Pen p = new Pen(Theme.Brass)) g.DrawRectangle(p, sw);
 
             int sx = _cursor.X + _virtual.X, sy = _cursor.Y + _virtual.Y;
-            TextRenderer.DrawText(g, Theme.Hex(px), Theme.MonoFont, new Point(sw.Right + 6, strip.Y + 5), Theme.Ink, Theme.Iron);
-            TextRenderer.DrawText(g, string.Format("{0},{1}", sx, sy), Theme.MonoSmall,
-                new Rectangle(strip.X, strip.Y + 6, strip.Width - 8, 18), Theme.BrassHi, Theme.Iron,
-                TextFormatFlags.Right | TextFormatFlags.SingleLine);
-            TextRenderer.DrawText(g, "click · arrows nudge · esc", Theme.MonoSmall,
-                new Point(strip.X + 8, strip.Y + 25), Theme.InkDim, Theme.Iron);
+            TextRenderer.DrawText(g, Theme.Hex(px), HexFont, new Rectangle(sw.Right + 5, sw.Y - 2, 70, 18), Theme.Ink, Theme.Iron,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(g, string.Format("{0},{1}", sx, sy), CoordFont,
+                new Rectangle(strip.X, sw.Y - 2, strip.Width - 8, 18), Theme.BrassHi, Theme.Iron,
+                TextFormatFlags.Right | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(g, "click · arrows nudge · esc", HelpFont,
+                new Rectangle(strip.X + 8, strip.Y + 26, strip.Width - 16, 14), Theme.InkDim, Theme.Iron,
+                TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine |
+                TextFormatFlags.NoPadding | TextFormatFlags.EndEllipsis);
+            g.ResetClip();
         }
     }
 }
