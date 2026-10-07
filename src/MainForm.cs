@@ -20,6 +20,7 @@ namespace TellMeWhenYouSeeThisChange
         private static readonly Rectangle LiveGauge = new Rectangle(186, 104, 64, 64);
         private static readonly Rectangle StatusPanel = new Rectangle(12, 264, 276, 48);
         private static readonly Rectangle LampRect = new Rectangle(32, 279, 18, 18);
+        private static readonly Rectangle SpeakerRect = new Rectangle(137, 372, 26, 22);
 
         private readonly float _s;
         private readonly BrassButton _selectButton;
@@ -37,7 +38,6 @@ namespace TellMeWhenYouSeeThisChange
         private bool _armed;
         private State _state = State.NoTarget;
         private double _pulse;
-        private bool _flashing;
 
         public MainForm()
         {
@@ -76,7 +76,7 @@ namespace TellMeWhenYouSeeThisChange
             _poll.Tick += delegate { Poll(); };
 
             _testTimer = new System.Windows.Forms.Timer { Interval = 1500 };
-            _testTimer.Tick += delegate { _testTimer.Stop(); if (_state != State.Changed) _tone.Stop(); };
+            _testTimer.Tick += delegate { _testTimer.Stop(); if (_state != State.Changed) SetTone(false); };
         }
 
         private int S(int v) { return (int)Math.Round(v * _s); }
@@ -148,11 +148,7 @@ namespace TellMeWhenYouSeeThisChange
         {
             _armed = armed && _hasTarget;
             _armButton.Text = _armed ? "DISARM" : "ARM";
-            if (!_armed)
-            {
-                _tone.Stop();
-                SetFlash(false);
-            }
+            if (!_armed) SetTone(false);
             _state = !_hasTarget ? State.NoTarget : _armed ? State.Armed : State.Idle;
             if (_armed) Poll();
             Invalidate();
@@ -177,17 +173,12 @@ namespace TellMeWhenYouSeeThisChange
                     if (_state != State.Changed)
                     {
                         _state = State.Changed;
-                        _tone.Start();
-                        SetFlash(true);
+                        SetTone(true);
                     }
                 }
                 else
                 {
-                    if (_state == State.Changed)
-                    {
-                        _tone.Stop();
-                        SetFlash(false);
-                    }
+                    if (_state == State.Changed) SetTone(false);
                     _state = State.Armed;
                 }
             }
@@ -197,17 +188,17 @@ namespace TellMeWhenYouSeeThisChange
             Invalidate(Sc(StatusPanel));
         }
 
-        private void SetFlash(bool on)
+        private void SetTone(bool on)
         {
-            if (on == _flashing) return;
-            _flashing = on;
-            NativeMethods.Flash(Handle, on);
+            if (on == _tone.IsPlaying) return;
+            if (on) _tone.Start(); else _tone.Stop();
+            Invalidate(Sc(SpeakerRect));
         }
 
         private void TestTone()
         {
             if (_state == State.Changed) return;
-            _tone.Start();
+            SetTone(true);
             _testTimer.Stop();
             _testTimer.Start();
         }
@@ -243,6 +234,8 @@ namespace TellMeWhenYouSeeThisChange
             tCol.Offset(0, S(17));
             DrawCentered(g, _hasTarget ? string.Format("x {0}  y {1}", _target.X, _target.Y) : "no pixel chosen",
                 Theme.MonoSmall, Theme.Brass, tCol);
+
+            Theme.Speaker(g, Sc(SpeakerRect), _tone.IsPlaying);
 
             // status
             Rectangle status = Sc(StatusPanel);

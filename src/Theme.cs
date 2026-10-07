@@ -127,6 +127,33 @@ namespace TellMeWhenYouSeeThisChange
             }
         }
 
+        /// <summary>Small speaker glyph; the three sound waves only show while <paramref name="on"/>.</summary>
+        public static void Speaker(Graphics g, Rectangle r, bool on)
+        {
+            float u = r.Height / 22f;
+            float x0 = r.X + u, cy = r.Y + r.Height / 2f;
+            Color body = on ? BrassHi : BrassLo;
+
+            using (SolidBrush b = new SolidBrush(body))
+            {
+                g.FillPolygon(b, new[]
+                {
+                    new PointF(x0, cy - 3 * u), new PointF(x0 + 4 * u, cy - 3 * u),
+                    new PointF(x0 + 9 * u, cy - 7 * u), new PointF(x0 + 9 * u, cy + 7 * u),
+                    new PointF(x0 + 4 * u, cy + 3 * u), new PointF(x0, cy + 3 * u)
+                });
+            }
+            if (!on) return;
+
+            using (Pen p = new Pen(BrassHi, Math.Max(1.2f, 1.6f * u)))
+            {
+                p.StartCap = p.EndCap = LineCap.Round;
+                float cx = x0 + 9 * u;
+                foreach (float radius in new[] { 4f * u, 7.5f * u, 11f * u })
+                    g.DrawArc(p, cx - radius, cy - radius, radius * 2, radius * 2, -45, 90);
+            }
+        }
+
         public static Color Blend(Color a, Color b, float t)
         {
             return Color.FromArgb(
