@@ -29,7 +29,7 @@ This can be used any time you want to know when something changes on your screen
 
 ### Options 1 - Download the .exe from the release
 
-Go to the Releases section of the GitHub Repo and download the exe file. I promise its not a virus, but of course you probably shouldn't trust promises from strangers on the internet.
+Go to the [Releases](https://github.com/dmwsd/tell-me-when-you-see-this-change/releases) section of the GitHub Repo and download the exe file. I promise its not a virus, but of course you probably shouldn't trust promises from strangers on the internet.
 
 ### Options 2 - Build the app yourself
 
